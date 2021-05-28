@@ -1,0 +1,104 @@
+(:~
+::
+:: Application Name: Sample
+::
+:: Search Name: Sample Search
+::
+::
+:: Copyright: Medtronic
+::
+:: @author Krushivardhan Reddy
+:: @since May 28, 2021
+:: @version 1.0
+:)
+
+(: :::::::::::::::::: Declaration and Initialization  of Variables, Namespaces :::::::::::::::::::: :)
+
+declare namespace ia = (: :) "urn:x-emc:ia:schema:fn";
+declare namespace table = (: :)  "urn:x-emc:ia:schema:table";
+declare variable $page external;
+declare variable $size external;
+declare variable $col1 external := '';
+declare variable $col2 external := '';
+declare variable $col3 external := '';
+declare variable $col4 external := '';
+declare variable $col5 external := '';
+
+declare variable $limit := 2000;
+
+declare function ia:create-encrypted-condition($expressionStr as xs:string, $operator as xs:string, $columnValue as xs:string*) as xs:string external;
+declare function ia:decrypt-value($columnValue as xs:string*) as xs:string* external;
+
+(: :::::::::::::::::::::::::::::::: Function definitions :::::::::::::::::::::::::::::::::::: :)
+
+declare function local:addClause($var xs:string*, $expr as xs:string*) as xs:string* {
+    if (empty($var) or $var = "" or normalize-space($var) = "") then ""
+    else concat("[", $expr , "]") 
+};
+
+declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string {
+    if (empty($var) or $var = '' or normalize-space($var) = '') then ''
+    else
+      return '[contains($col,'",$var,"')]'
+};
+
+declare function local:julianDateConversion($value as xs:string*) as xs:string*{
+    let $returnValue := ""
+    let $strVal := string-length($value)
+    let $assertSixDigitsString := if(xs:integer($strVal) = 5) then concat("0",$value) else $value
+    let $century := (19 + xs:integer(substring($assertSixDigitsString, 1, 1))) * 100
+    let $year := xs:integer($century) + xs:integer(substring($assertSixDigitsString,2,2))
+    let $numberOfDays := xs:integer(substring($assertSixDigitsString,4)) - 1
+    let $startDate := concat($year, "-01-01")
+    let $timeDuration := concat("P",$numberOfDays,"D")
+    let $returnValue := xs:string(xs:date(normalize-space(data($startDate))) + xs:dayTimeDuration($timeDuration))
+
+    return $returnValue
+};
+
+declare function local:getResultsPage($rows, $page, $size) {
+    let $offset := $page * $size let $total := count($rows)
+    return   <results total="{ $total }">    {
+               for $row in subsequence($rows, $offset + 1, $size)
+                 return $row
+               }
+             </results>
+};
+
+
+(: :::::::::::::::::::::::::::::::: Main Function definition :::::::::::::::::::::::::::::::::::: :)
+
+declare function local:MAIN($col1, $col2, $col3, $col4, $col5, $limit, $page, $size) {
+
+    let $import := 'declare namespace ia = (: :) "urn:x-emc:ia:schema:fn";
+                    declare namespace table = (: :)  "urn:x-emc:ia:schema:table";'
+
+	let $query := concat(
+				" for $table1 in DBO/table1/ROW",
+				local:addClause($col1/from, concat("substring(col1,1,10) >= '", substring($col1/from,1,10), "'")),
+				local:addClause($col1/to, concat("substring(col1,1,10) <= '", substring($col1/to,1,10), "'")),
+				local:addClause($col2, concat("col2 >= '", $col2, "'")),
+				local:addClause($col2, concat("col2 <= '", $col2, "'")),
+				" for $table2 in DBO/table2/ROW[col3=$table1/col1]",
+				local:addClause($col3, ia:create-encrypted-condition('col3', '=', $col3)),
+				" for $table3 in DBO/table3/ROW[col4=$table2/col3]",
+				local:addClauseWild($col4, 'col4'),
+				local:addClause($col5, concat("substring(col5,1,10) = '", substring($col5,1,10), "'")),
+				" return ")
+
+	let $return := "<row id='{string($table1/@table:id)}'>
+				<column name=col1>{$table1/col1/string()}</column>
+				<column name=col2>{ia:decrypt-value($table1/col2/string())}</column>
+				<column name=col3>{$table2/col3/string()}</column>
+				<column name=col4>{$table3/col4/string()}</column>
+				<column name=col5>{$table3/col5/@ref/string()}</column>
+				</row>"
+
+	let $mainQuery := subsequence(xhive:evaluate(concat($import,$query,$return)),1,$limit)
+
+	return local:getResultsPage($mainQuery, $page, $size)
+};
+
+(: :::::::::::::::::::::::::::::::: Main Function Call :::::::::::::::::::::::::::::::::::: :)
+local:MAIN($time, $user,  $limit, $page, $size)
+
