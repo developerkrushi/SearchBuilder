@@ -162,13 +162,13 @@ class Model:
                 download = list(outputFlags[column])[0]
                 decrypt = list(outputFlags[column])[1]
                 if download == 'y':
-                    string += '<column name=' + column + '>{$' + table + '/' + column + '/@ref/string()}</column>\n'
+                    string += '<column name=\'' + column + '\'>{$' + table + '/' + column + '/@ref/string()}</column>\n'
                     string += '\t\t\t\t'
                 elif decrypt == 'y':
-                    string += '<column name=' + column + '>{ia:decrypt-value($' + table + '/' + column + '/string())}</column>\n'
+                    string += '<column name=\'' + column + '\'>{ia:decrypt-value($' + table + '/' + column + '/string())}</column>\n'
                     string += '\t\t\t\t'
                 else:
-                    string += '<column name=' + column + '>{$' + table + '/' + column + '/string()}</column>\n'
+                    string += '<column name=\'' + column + '\'>{$' + table + '/' + column + '/string()}</column>\n'
                     string += '\t\t\t\t'
         string += '</row>'
 
