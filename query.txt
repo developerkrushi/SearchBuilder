@@ -100,5 +100,4 @@ declare function local:MAIN($col1, $col2, $col3, $col4, $col5, $limit, $page, $s
 };
 
 (: :::::::::::::::::::::::::::::::: Main Function Call :::::::::::::::::::::::::::::::::::: :)
-local:MAIN($time, $user,  $limit, $page, $size)
-
+local:MAIN($col1, $col2, $col3, $col4, $col5, $limit, $page, $size)

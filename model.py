@@ -239,7 +239,13 @@ class Model:
         mainSection += ('\n\n\treturn local:getResultsPage($mainQuery, $page, $size)\n'
                         '};\n\n'
                         '(: :::::::::::::::::::::::::::::::: Main Function Call :::::::::::::::::::::::::::::::::::: :)\n'
-                        'local:MAIN($time, $user,  $limit, $page, $size)\n\n')
+                        'local:MAIN(')
+
+        for column in inputColumns:
+            mainSection += '$' + column + ', '
+
+        mainSection += '$limit, $page, $size)'
+
 
         string += declarationSection + defaultFunctions + '\n\n' + mainSection
 
