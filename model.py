@@ -1,6 +1,9 @@
 import pandas as pd
 from DataSet import DataSet
+
 ds = DataSet()
+
+
 class Model:
 
     # return the namespace definitions
@@ -11,8 +14,8 @@ class Model:
         return string
 
     def declareVariables(self, variables: list) -> str:
-        string =('declare variable $page external;\n'
-                 'declare variable $size external;\n')
+        string = ('declare variable $page external;\n'
+                  'declare variable $size external;\n')
 
         for x in variables:
             string += 'declare variable $' + str(x) + ' external := \'\';\n'
@@ -22,31 +25,22 @@ class Model:
         return string
 
     def encryptFunction(self):
-        string = ('declare function ia:create-encrypted-condition($expressionStr as xs:string, $operator as xs:string, $columnValue as xs:string*) as xs:string external;\n'
-                  'declare function ia:decrypt-value($columnValue as xs:string*) as xs:string* external;\n')
+        string = (
+            'declare function ia:create-encrypted-condition($expressionStr as xs:string, $operator as xs:string, $columnValue as xs:string*) as xs:string external;\n'
+            'declare function ia:decrypt-value($columnValue as xs:string*) as xs:string* external;\n')
 
         return string
 
     # return the definition of addClause function
     def addClause(self) -> str:
 
-        string = ('declare function local:addClause($var as xs:string*, $expr as xs:string*) as xs:string* {\n'
+        string = ('declare function local:addClause($var as xs:string*, $expr as xs:string) as xs:string* {\n'
                   '    if (empty($var) or $var = "" or normalize-space($var) = "") then ""\n'
                   '    else concat("[", $expr , "]") \n'
                   '};\n')
 
         return string
 
-    def addClauseWild(self) -> str:
-        string = ('declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string {\n'
-                  '    if (empty($var) or $var = '' or normalize-space($var) = '') then ""\n'
-                  '    else\n'
-                  '    let $x := if (matches($var,".*")) then $var else concat(\'.*\',$var,\'.*\')\n'
-                  '    let $y := concat($col,\' contains text {".*\',$x,\'.*"} using wildcards \')\n'
-                  '  return concat("[", $y , "]")\n'
-                  '};\')')
-
-        return string
     # return the definition of getResultsPage function
     def getResultsPage(self) -> str:
 
@@ -63,7 +57,7 @@ class Model:
 
     # return function definition for WildCard
     def addClauseWild(self) -> str:
-        string = ("declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string {\n"
+        string = ("declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string* {\n"
                   "    if (empty($var) or $var = '' or normalize-space($var) = '') then ''\n"
                   "    else\n"
                   "        let $x := concat('[contains(',$col,',\"',$var,'\")]')\n"
@@ -108,9 +102,8 @@ class Model:
             if table in joinData:
                 keys = joinData[table]
                 stringJoin = '[' + keys[0] + '=' + '$' + keys[1] + '/' + keys[2] + ']'
-            string += stringJoin +'",\n'
+            string += stringJoin + '",\n'
             string += '\t\t\t\t'
-
 
             for column in tableData[table]:
                 flags = inputFlags[column]
@@ -135,7 +128,7 @@ class Model:
                     string += 'local:addClause($' + column + ', concat("' + column + ' <= \'", $' + column + ', "\'")),\n'
                     string += '\t\t\t\t'
                 elif flags[3] == 'y':
-                    string += 'local:addClause($' + column+ ', ia:create-encrypted-condition(\'' + column + '\', \'=\', $' + column + ')),\n'
+                    string += 'local:addClause($' + column + ', ia:create-encrypted-condition(\'' + column + '\', \'=\', $' + column + ')),\n'
                     string += '\t\t\t\t'
                 elif flags[2] == 'y':
                     string += 'local:addClauseWild($' + column + ', \'' + column + '\'),\n'
@@ -146,7 +139,6 @@ class Model:
                 else:
                     string += 'local:addClause($' + column + ', concat("' + column + ' = \'", $' + column + ', "\'")),\n'
                     string += '\t\t\t\t'
-
 
         string += '" return ")'
 
@@ -231,11 +223,14 @@ class Model:
         mainSection += ('    let $import := \'declare namespace ia = (: :) "urn:x-emc:ia:schema:fn";\n'
                         '                    declare namespace table = (: :)  "urn:x-emc:ia:schema:table";\'')
 
-        mainSection += '\n\n\t' + self.createVariable('query', self.queryString(schema, tableData, inputFlags, joinData))
+        mainSection += '\n\n\t' + self.createVariable('query',
+                                                      self.queryString(schema, tableData, inputFlags, joinData))
 
-        mainSection += '\n\n\t' + self.createVariable('return', '"' + self.returnString(outputTables, downloadFlags) + '"')
+        mainSection += '\n\n\t' + self.createVariable('return',
+                                                      '"' + self.returnString(outputTables, downloadFlags) + '"')
 
-        mainSection += '\n\n\t' + self.createVariable('mainQuery', 'subsequence(xhive:evaluate(concat($import,$query,$return)),1,$limit)')
+        mainSection += '\n\n\t' + self.createVariable('mainQuery',
+                                                      'subsequence(xhive:evaluate(concat($import,$query,$return)),1,$limit)')
 
         mainSection += ('\n\n\treturn local:getResultsPage($mainQuery, $page, $size)\n'
                         '};\n\n'
@@ -246,7 +241,6 @@ class Model:
             mainSection += '$' + column + ', '
 
         mainSection += '$limit, $page, $size)'
-
 
         string += declarationSection + defaultFunctions + '\n\n' + mainSection
 
