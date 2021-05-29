@@ -30,7 +30,7 @@ class Model:
     # return the definition of addClause function
     def addClause(self) -> str:
 
-        string = ('declare function local:addClause($var xs:string*, $expr as xs:string*) as xs:string* {\n'
+        string = ('declare function local:addClause($var as xs:string*, $expr as xs:string*) as xs:string* {\n'
                   '    if (empty($var) or $var = "" or normalize-space($var) = "") then ""\n'
                   '    else concat("[", $expr , "]") \n'
                   '};\n')
@@ -66,7 +66,8 @@ class Model:
         string = ("declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string {\n"
                   "    if (empty($var) or $var = '' or normalize-space($var) = '') then ''\n"
                   "    else\n"
-                  "      return '[contains($col,'\",$var,\"')]'\n"
+                  "        let $x := concat('[contains(',$col,',\"',$var,'\")]')\n"
+                  "      return $x\n"
                   "};\n")
 
         return string
