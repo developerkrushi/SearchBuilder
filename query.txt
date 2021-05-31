@@ -8,7 +8,7 @@
 :: Copyright: Medtronic
 ::
 :: @author Krushivardhan Reddy
-:: @since May 28, 2021
+:: @since May 31, 2021
 :: @version 1.0
 :)
 
@@ -31,15 +31,16 @@ declare function ia:decrypt-value($columnValue as xs:string*) as xs:string* exte
 
 (: :::::::::::::::::::::::::::::::: Function definitions :::::::::::::::::::::::::::::::::::: :)
 
-declare function local:addClause($var xs:string*, $expr as xs:string*) as xs:string* {
+declare function local:addClause($var as xs:string*, $expr as xs:string) as xs:string* {
     if (empty($var) or $var = "" or normalize-space($var) = "") then ""
     else concat("[", $expr , "]") 
 };
 
-declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string {
+declare function local:addClauseWild($var as xs:string*, $col as xs:string) as xs:string* {
     if (empty($var) or $var = '' or normalize-space($var) = '') then ''
     else
-      return '[contains($col,'",$var,"')]'
+        let $x := concat('[contains(',$col,',"',$var,'")]')
+      return $x
 };
 
 declare function local:julianDateConversion($value as xs:string*) as xs:string*{
@@ -87,11 +88,11 @@ declare function local:MAIN($col1, $col2, $col3, $col4, $col5, $limit, $page, $s
 				" return ")
 
 	let $return := "<row id='{string($table1/@table:id)}'>
-				<column name=col1>{$table1/col1/string()}</column>
-				<column name=col2>{ia:decrypt-value($table1/col2/string())}</column>
-				<column name=col3>{$table2/col3/string()}</column>
-				<column name=col4>{$table3/col4/string()}</column>
-				<column name=col5>{$table3/col5/@ref/string()}</column>
+				<column name='col1'>{$table1/col1/string()}</column>
+				<column name='col2'>{ia:decrypt-value($table1/col2/string())}</column>
+				<column name='col3'>{$table2/col3/string()}</column>
+				<column name='col4'>{$table3/col4/string()}</column>
+				<column name='col5'>{$table3/col5/@ref/string()}</column>
 				</row>"
 
 	let $mainQuery := subsequence(xhive:evaluate(concat($import,$query,$return)),1,$limit)

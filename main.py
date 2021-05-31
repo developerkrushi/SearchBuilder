@@ -1,33 +1,5 @@
-from model import Model
-from DataSet import DataSet
+import model as md
 import pandas as pd
-import datetime
-
-md = Model()
-ds = DataSet()
-
-
-def codeBrief(metadata: dict) -> str:
-    searchName = metadata['Search'][0]
-    appName = metadata['Application'][0]
-    author = metadata['Author'][0]
-    date = datetime.date.today()
-
-    string = ('(:~\n'
-              '::\n'
-              f':: Application Name: {appName}\n'
-              '::\n'
-              f':: Search Name: {searchName}\n'
-              '::\n'
-              '::\n'
-              ':: Copyright: Medtronic\n'
-              '::\n'
-              f':: @author {author}\n'
-              f':: @since {date.strftime("%b %d, %Y")}\n'
-              ':: @version 1.0\n'
-              ':)\n\n')
-
-    return string
 
 
 def readExcel(excel) -> tuple:
@@ -43,11 +15,9 @@ def readExcel(excel) -> tuple:
 def main():
     inputData, outputData, joinData, metadata = readExcel('input.xlsx')
 
-    string = md.mainFunction(inputData, outputData, joinData)
-    codeHeader = codeBrief(metadata)
+    string = md.mainFunction(inputData, outputData, joinData, metadata)
 
     with open('query.txt', 'w') as file:
-        file.write(codeHeader)
         file.write(string)
 
 
