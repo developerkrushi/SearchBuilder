@@ -1,26 +1,10 @@
-import model as md
-import pandas as pd
+import yaml
 
+dic = {'version': '1.0.0',
+       'application': {'name': 'Stellent', 'configure': 'use existing'},
+       'tenant': {'name': 'INFOARCHIVE', 'configure': 'use existing'},
+       'includes': ['data-model-config/configuration.yml', 'searches/configuration.yml']
+        }
 
-def readExcel(excel) -> tuple:
-    inputData = pd.read_excel(excel, 'Input')
-    outputData = pd.read_excel(excel, 'Output')
-    joinData = pd.read_excel(excel, 'Joins')
-    details = pd.read_excel(excel, 'Details')
-    metadata = details.set_index('Field').T.to_dict('list')
-
-    return inputData, outputData, joinData, metadata
-
-
-def main():
-    inputData, outputData, joinData, metadata = readExcel('input.xlsx')
-
-    string = md.mainFunction(inputData, outputData, joinData, metadata)
-
-    with open('query.txt', 'w') as file:
-        file.write(string)
-
-
-if __name__ == '__main__':
-    main()
-
+with open('configuration.yml', 'w') as file:
+    yaml.dump(dic, file, default_flow_style=False, sort_keys=False)
