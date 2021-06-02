@@ -1,5 +1,5 @@
 import pandas as pd
-import dataset as ds
+import query.dataset as ds
 import datetime
 
 
@@ -118,7 +118,7 @@ def createVariable(name: str, value: str) -> str:
 
 
 # create "for loop" part of the query
-def queryString(schema: str, tableData: dict, inputFlags: dict, joinData: dict) -> str:
+def queryString(schema: str, tableData: dict, inputFlags: dict, joinData: dict, join: str) -> str:
     string = 'concat(\n'
     string += '\t\t\t\t'
 
@@ -128,9 +128,12 @@ def queryString(schema: str, tableData: dict, inputFlags: dict, joinData: dict) 
 
         # attach join conditions
         stringJoin = ''
-        if table in joinData:
+        joinTables = {}
+        if table in joinData and join == 'y':
             keys = joinData[table]
             stringJoin = '[' + keys[0] + '=' + '$' + keys[1] + '/' + keys[2] + ']'
+            joinTables[table] = True
+
         string += stringJoin + '",\n'
         string += '\t\t\t\t'
 
@@ -169,6 +172,14 @@ def queryString(schema: str, tableData: dict, inputFlags: dict, joinData: dict) 
                 string += 'local:addClause($' + column + ', concat("' + column + ' = \'", $' + column + ', "\'")),\n'
                 string += '\t\t\t\t'
 
+    for table in joinData:
+        if table not in joinTables.keys():
+            keys = joinData[table]
+            string += '" for $' + table + ' in ' + schema + '/' + table + '/ROW'
+            string += '[' + keys[0] + '=' + '$' + keys[1] + '/' + keys[2] + ']'
+
+    string += '",\n'
+    string += '\t\t\t\t'
     string += '" return ")'
 
     return string
@@ -202,6 +213,7 @@ def returnString(data: dict, outputFlags: dict) -> str:
 # Create full Query using above functions
 def mainFunction(inputData: pd.DataFrame, outputData: pd.DataFrame, joinData: pd.DataFrame, metadata: dict) -> str:
     schema = inputData['Schema'].tolist()[0]
+    join = joinData['Join'].tolist()[0]
 
     tableData = ds.inputTables(inputData)
     inputFlags = ds.inputFlags(inputData)
@@ -258,7 +270,7 @@ def mainFunction(inputData: pd.DataFrame, outputData: pd.DataFrame, joinData: pd
                     '                    declare namespace table = (: :)  "urn:x-emc:ia:schema:table";\'')
 
     mainSection += '\n\n\t' + createVariable('query',
-                                             queryString(schema, tableData, inputFlags, joinData))
+                                             queryString(schema, tableData, inputFlags, joinData, join))
 
     mainSection += '\n\n\t' + createVariable('return',
                                              '"' + returnString(outputTables, downloadFlags) + '"')

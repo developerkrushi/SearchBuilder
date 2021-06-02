@@ -1,4 +1,4 @@
-import model as md
+import query.model as md
 import pandas as pd
 
 
@@ -12,7 +12,7 @@ def readExcel(excel) -> tuple:
     return inputData, outputData, joinData, metadata
 
 
-def main():
+def query():
     inputData, outputData, joinData, metadata = readExcel('input.xlsx')
 
     string = md.mainFunction(inputData, outputData, joinData, metadata)
@@ -24,5 +24,5 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    query()
 

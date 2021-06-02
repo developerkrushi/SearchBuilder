@@ -31,7 +31,7 @@ def inputTables(inputData: pd.DataFrame) -> dict:
 def joinsData(joinData: pd.DataFrame) -> dict:
 
     joinData[['Primary Table', 'Primary Key']] = joinData[['Primary Table', 'Primary Key']].fillna(method='ffill')
-    joinDf = joinData[['Secondary Table', 'Foreign Key', 'Primary Table', 'Primary Key']]
+    joinDf = joinData[['Secondary Table', 'Foreign Key', 'Primary Table', 'Primary Key', 'Join']]
     joinParameters = joinDf.set_index('Secondary Table').T.to_dict('list')
 
     return joinParameters
