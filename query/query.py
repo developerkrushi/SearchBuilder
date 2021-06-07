@@ -17,8 +17,8 @@ def query():
 
     string = md.mainFunction(inputData, outputData, joinData, metadata)
 
-    # with open('query.txt', 'w') as file:
-    #     file.write(string)
+    with open('query.txt', 'w') as file:
+        file.write(string)
 
     return string
 
