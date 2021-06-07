@@ -31,6 +31,7 @@ def database(appname: str) -> dict:
 
 def resultMaster(outputdata: pd.DataFrame, metadata: dict):
     columns = outputdata['Output'].tolist()
+    labels = outputdata['Label'].tolist()
     columnsList = []
     downloadFlags = outputdata['Download'].tolist()
     appName = metadata['Application'][0]
@@ -48,7 +49,7 @@ def resultMaster(outputdata: pd.DataFrame, metadata: dict):
         else:
             dictColumn = {'name': column,
                           'contentLinkType': 'CUSTOM',
-                          'label': column,
+                          'label': labels[i],
                           'type': 'xquery reference'}
 
         columnsList.append(dictColumn)
@@ -208,6 +209,7 @@ def configProperties(path):
 def xformHTML(path):
     searchName = metadata['Search'][0]
     columns = inputData['Input'].tolist()
+    labels = inputData['Label'].tolist()
     range = inputData['Range'].tolist()
     date = inputData['Date'].tolist()
     wild = inputData['WildCard'].tolist()
@@ -235,7 +237,8 @@ def xformHTML(path):
                     '        <labels>'))
 
         for column in columns:
-            file.write(f'<{column}>{column}:</{column}>')
+            i = columns.index(column)
+            file.write(f'<{column}>{labels[i]}:</{column}>')
 
         file.write(('</labels></xforms:instance>'
                     '\n'        

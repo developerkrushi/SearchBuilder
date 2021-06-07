@@ -47,11 +47,16 @@ def declareVariables(variables: list) -> str:
     return string
 
 
-# Encryption definition
+# Encryption declaration
 def encryptFunction():
-    string = (
-        'declare function ia:create-encrypted-condition($expressionStr as xs:string, $operator as xs:string, $columnValue as xs:string*) as xs:string external;\n'
-        'declare function ia:decrypt-value($columnValue as xs:string*) as xs:string* external;\n')
+    string = 'declare function ia:create-encrypted-condition($expressionStr as xs:string, $operator as xs:string, $columnValue as xs:string*) as xs:string external;\n'
+
+    return string
+
+
+# Decryption declaration
+def decryptFunction():
+    string = 'declare function ia:decrypt-value($columnValue as xs:string*) as xs:string* external;\n'
 
     return string
 
@@ -173,40 +178,87 @@ def queryString(schema: str, tableData: dict, inputFlags: dict, joinData: dict, 
                 string += '\t\t\t\t'
 
     for table in joinData:
-        if table not in joinTables.keys():
+        if table not in joinTables.keys() and join == 'y':
             keys = joinData[table]
             string += '" for $' + table + ' in ' + schema + '/' + table + '/ROW'
             string += '[' + keys[0] + '=' + '$' + keys[1] + '/' + keys[2] + ']'
+            string += '",\n' + '\t\t\t\t'
 
-    string += '",\n'
-    string += '\t\t\t\t'
+
     string += '" return ")'
 
     return string
 
 
 # create return part of the query
-def returnString(data: dict, outputFlags: dict) -> str:
+def returnString(data: dict, outputFlags: dict) -> tuple:
     primaryTable = list(data.keys())[0]
+    string = ''
 
-    string = '<row id=\'{string($' + primaryTable + '/@table:id)}\'>\n'
-    string += '\t\t\t\t'
-
+    decryption = False
+    columnString = ''
     for table in data:
+        columnString = '<row id=\'{string($' + primaryTable + '/@table:id)}\'>\n'
+        columnString += '\t\t\t\t'
         for column in data[table]:
             download = list(outputFlags[column])[0]
             decrypt = list(outputFlags[column])[1]
-            if download == 'y':
-                string += '<column name=\'' + column + '\'>{$' + table + '/' + column + '/@ref/string()}</column>\n'
-                string += '\t\t\t\t'
-            elif decrypt == 'y':
-                string += '<column name=\'' + column + '\'>{ia:decrypt-value($' + table + '/' + column + '/string())}</column>\n'
-                string += '\t\t\t\t'
-            else:
-                string += '<column name=\'' + column + '\'>{$' + table + '/' + column + '/string()}</column>\n'
-                string += '\t\t\t\t'
-    string += '</row>'
 
+            if decrypt == 'y':
+                decryption = True
+                break
+            elif download == 'y':
+                columnString += '<column name=\'' + column + '\'>{$' + table + '/' + column + '/@ref/string()}</column>\n'
+                columnString += '\t\t\t\t'
+
+            else:
+                columnString += '<column name=\'' + column + '\'>{$' + table + '/' + column + '/string()}</column>\n'
+                columnString += '\t\t\t\t'
+        if decryption:
+            break
+
+    if decryption:
+        decryptColumnString = '<result\n\t\t\t\t'
+
+        for table in data:
+            for column in data[table]:
+                download = list(outputFlags[column])[0]
+
+                if download == 'y':
+                    decryptColumnString += column + ' = \'{$' + table + '/' + column + '/@ref/string()}\'\n'
+                    decryptColumnString += '\t\t\t\t'
+
+                else:
+                    decryptColumnString += column + ' = \'{$' + table + '/' + column + '/string()}\'\n'
+                    decryptColumnString += '\t\t\t\t'
+
+        string += decryptColumnString + '/>'
+    else:
+        string += columnString + '</row>'
+
+    return string, decryption
+
+
+def decryptReturn(data: dict, outputFlags: dict) -> str:
+    string = '(for $x in $results\n'
+    string += '\t\t\t\t\t\t  ' + 'return\n'
+
+    for table in data:
+        string += '\t\t\t\t\t\t  ' + '<row id=\'{string($x/@table:id)}\'>\n'
+        string += '\t\t\t\t\t\t  '
+        for column in data[table]:
+            download = list(outputFlags[column])[0]
+            decrypt = list(outputFlags[column])[1]
+
+            if decrypt == 'y':
+                string += '<column name=\'' + column + '\'>{ia:decrypt-value($x/@' + column + '/string())}</column>\n'
+                string += '\t\t\t\t\t\t  '
+
+            else:
+                string += '<column name=\'' + column + '\'>{$x/@' + column + '/string()}</column>\n'
+                string += '\t\t\t\t\t\t  '
+
+    string += '</row>)'
     return string
 
 
@@ -225,10 +277,15 @@ def mainFunction(inputData: pd.DataFrame, outputData: pd.DataFrame, joinData: pd
     if 'y' in wildCardFields:
         wildCard = True
 
-    encryptionFeilds = inputData['Encryption'].tolist()
+    encryptionFields = inputData['Encryption'].tolist()
     encryption = False
-    if 'y' in encryptionFeilds:
+    if 'y' in encryptionFields:
         encryption = True
+
+    decryptionFields = outputData['Decrypt'].tolist()
+    decryption = False
+    if 'y' in decryptionFields:
+        decryption = True
 
     julianFields = inputData['JulianDate'].tolist()
     julian = False
@@ -247,6 +304,9 @@ def mainFunction(inputData: pd.DataFrame, outputData: pd.DataFrame, joinData: pd
 
     if encryption:
         declarationSection += encryptFunction() + '\n'
+
+    if decryption:
+        declarationSection += decryptFunction() + '\n'
 
     defaultFunctions = '(: :::::::::::::::::::::::::::::::: Function definitions :::::::::::::::::::::::::::::::::::: :)\n\n'
     defaultFunctions += addClause() + '\n'
@@ -272,13 +332,21 @@ def mainFunction(inputData: pd.DataFrame, outputData: pd.DataFrame, joinData: pd
     mainSection += '\n\n\t' + createVariable('query',
                                              queryString(schema, tableData, inputFlags, joinData, join))
 
-    mainSection += '\n\n\t' + createVariable('return',
-                                             '"' + returnString(outputTables, downloadFlags) + '"')
+    returnStr, decryption = returnString(outputTables, downloadFlags)
 
-    mainSection += '\n\n\t' + createVariable('mainQuery',
+    mainSection += '\n\n\t' + createVariable('return',
+                                             '"' + returnStr + '"')
+
+    mainSection += '\n\n\t' + createVariable('results',
                                              'subsequence(xhive:evaluate(concat($import,$query,$return)),1,$limit)')
 
-    mainSection += ('\n\n\treturn local:getResultsPage($mainQuery, $page, $size)\n'
+    results = 'results'
+    if decryption:
+        mainSection += '\n\n\t' + createVariable('finalResults', decryptReturn(outputTables, downloadFlags))
+        results = 'finalResults'
+
+
+    mainSection += (f'\n\n\treturn local:getResultsPage(${results}, $page, $size)\n'
                     '};\n\n'
                     '(: :::::::::::::::::::::::::::::::: Main Function Call :::::::::::::::::::::::::::::::::::: :)\n'
                     'local:MAIN(')

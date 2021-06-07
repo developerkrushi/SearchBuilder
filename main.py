@@ -18,12 +18,8 @@ else:
 
 
 def createConfigFiles():
-    files = []
-    files.append(cm.searchesConfig(searchConfigPath))
-    files.append(cm.config(configPath))
-    files.append(cm.dataModelConfig(dataModelConfigPath))
-    files.append(cm.configProperties(configPath))
-    files.append(cm.xformHTML(searchConfigPath))
+    files = [cm.searchesConfig(searchConfigPath), cm.config(configPath), cm.dataModelConfig(dataModelConfigPath),
+             cm.configProperties(configPath), cm.xformHTML(searchConfigPath)]
 
     cm.zipFiles(files, configPath)
 
