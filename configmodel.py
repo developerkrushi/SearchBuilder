@@ -1,12 +1,13 @@
-import query.query as qy
+import query.model as md
 import pandas as pd
 import yaml
 import os
 import datetime
 from zipfile import ZipFile
 import shutil
+from main import *
 
-inputData, outputData, joinData, metadata = qy.readExcel('input.xlsx')
+#inputData, outputData, joinData, metadata = qy.readExcel('input.xlsx')
 
 
 def version() -> dict:
@@ -95,7 +96,7 @@ def searchesConfig(path):
     path = os.path.join(path, 'configuration.yml')
     searchName = metadata['Search'][0]
     appName = metadata['Application'][0]
-    query = qy.query()
+    query = md.mainFunction(inputData, outputData, joinData, metadata)
 
     dd = resultMaster(outputData, metadata)
     dl = xquery(metadata)
