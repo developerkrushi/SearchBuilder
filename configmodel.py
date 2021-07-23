@@ -44,7 +44,7 @@ def resultMaster(outputdata: pd.DataFrame, metadata: dict):
                           'cellLabel': 'Click Here',
                           'contentLinkType': 'CUSTOM',
                           'dataType': 'CID',
-                          'label': 'Download',
+                          'label': labels[i],
                           'type': 'content'}
 
         else:
