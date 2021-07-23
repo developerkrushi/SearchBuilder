@@ -1,0 +1,14 @@
+version: 1.0.0
+
+tenant:
+  name: INFOARCHIVE
+  configure: use existing
+
+application:
+  name: Stellent
+  configure: use existing
+
+database:
+  name: Stellent-sql-db
+  configure: use existing
+

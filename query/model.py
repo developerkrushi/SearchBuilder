@@ -197,9 +197,9 @@ def returnString(data: dict, outputFlags: dict) -> tuple:
 
     decryption = False
     columnString = ''
+    columnString = '<row id=\'{string($' + primaryTable + '/@table:id)}\'>\n'
+    columnString += '\t\t\t\t'
     for table in data:
-        columnString = '<row id=\'{string($' + primaryTable + '/@table:id)}\'>\n'
-        columnString += '\t\t\t\t'
         for column in data[table]:
             download = list(outputFlags[column])[0]
             decrypt = list(outputFlags[column])[1]
@@ -242,10 +242,10 @@ def returnString(data: dict, outputFlags: dict) -> tuple:
 def decryptReturn(data: dict, outputFlags: dict) -> str:
     string = '(for $x in $results\n'
     string += '\t\t\t\t\t\t  ' + 'return\n'
+    string += '\t\t\t\t\t\t  ' + '<row id=\'{string($x/@table:id)}\'>\n'
+    string += '\t\t\t\t\t\t  '
 
     for table in data:
-        string += '\t\t\t\t\t\t  ' + '<row id=\'{string($x/@table:id)}\'>\n'
-        string += '\t\t\t\t\t\t  '
         for column in data[table]:
             download = list(outputFlags[column])[0]
             decrypt = list(outputFlags[column])[1]

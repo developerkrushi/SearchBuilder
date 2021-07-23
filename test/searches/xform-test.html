@@ -1,0 +1,33 @@
+<xhtml:html xmlns:xhtml="http://www.w3.org/1999/xhtml" xmlns:xforms="http://www.w3.org/2002/xforms" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+<xhtml:head>
+    <xforms:model>
+        <xforms:instance xmlns="">
+
+        <data>
+            <DDOCID/><DORIGINALNAME/></data></xforms:instance>
+        <xforms:instance xmlns="" id="labels">
+
+        <labels><DDOCID>Document Id:</DDOCID><DORIGINALNAME>Document Name:</DORIGINALNAME></labels></xforms:instance>
+        <xforms:instance xmlns="" id="hints">
+
+        <hints><DDOCID/><DORIGINALNAME/></hints></xforms:instance>
+        <xforms:instance xmlns="" id="prompts">
+
+        <prompts><DDOCID/><DORIGINALNAME/></prompts></xforms:instance>
+        <xforms:instance xmlns="" id="alerts">
+
+        <alerts><DDOCID/><DORIGINALNAME/></alerts></xforms:instance>
+        <xforms:instance xmlns="" id="range-messages">
+
+        <rangemessages><DDOCID/><DORIGINALNAME/></rangemessages></xforms:instance>
+        <xforms:instance xmlns="" id="pattern-messages">
+
+        <patternmessages><DDOCID/><DORIGINALNAME/></patternmessages></xforms:instance>
+        <xforms:submission id="submit01" method="post" serialization="application/xml"/>
+        <xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xforms="http://www.w3.org/2002/xforms" targetNamespace="http://www.w3.org/2002/xforms" elementFormDefault="qualified">
+        </xsd:schema>
+    <xforms:bind ref="/data/DDOCID"/><xforms:bind ref="/data/DORIGINALNAME"/></xforms:model>
+</xhtml:head>
+<xhtml:body>
+<input xmlns="http://www.w3.org/2002/xforms" ref="/data/DDOCID"><label ref="instance('labels')/DDOCID"/><hint ref="instance('hints')/DDOCID"/><hint appearance="minimal" ref="instance('prompts')/DDOCID"/><alert ref="instance('alerts')/DDOCID"/><message class="range" ref="instance('range-messages')/DDOCID"/><message class="pattern" ref="instance('pattern-messages')/DDOCID"/></input><input xmlns="http://www.w3.org/2002/xforms" ref="/data/DORIGINALNAME"><label ref="instance('labels')/DORIGINALNAME"/><hint ref="instance('hints')/DORIGINALNAME"/><hint appearance="minimal" ref="instance('prompts')/DORIGINALNAME"/><alert ref="instance('alerts')/DORIGINALNAME"/><message class="range" ref="instance('range-messages')/DORIGINALNAME"/><message class="pattern" ref="instance('pattern-messages')/DORIGINALNAME"/></input></xhtml:body>
+</xhtml:html>
